@@ -1,31 +1,17 @@
-MONGO_OBJECTS=c_driver/src/bcon.o c_driver/src/bson.o c_driver/src/encoding.o \
-							c_driver/src/gridfs.o c_driver/src/md5.o c_driver/src/mongo.o \
-							c_driver/src/numbers.o c_driver/src/env.o
-MONGO_C_LIB = c_driver/libmongoc.a c_driver/libbson.a
+PLATFORM = none
+PLATFORMS = linux win32
 
-OBJECT = mongodriver
-OBJECT_S = lib$(OBJECT).a
+first: $(PLATFORM)
 
-all: sub_c_driver $(OBJECT_S)
+none:
+	@echo "Please do 'make PLATFORM' where PLATFORM is one of these:"
+	@echo "   $(PLATFORMS)"
 
-sub_c_driver:
-	make -C c_driver
+linux:
+	$(MAKE) -f linux.mk
 
-libmongodriver.a: bsonobj.o client.o $(MONGO_OBJECTS)
-	ar rs $@ bsonobj.o client.o $(MONGO_OBJECTS)
+win32:
+	$(MAKE) -f win32.mk
 
-%.o: %.cpp
-	g++ -gdwarf-4 -Wall -Wextra -Werror -o $@ -DMONGO_HAVE_STDINT -c $< -std=c++11
-
-%.o: %.c
-	$(CC) -gdwarf-4 -o $@ -c -DMONGO_HAVE_STDINT $(ALL_CFLAGS) $<
-
-test: FORCE
-	make -C test
-
-clean: FORCE
-	make -C c_driver clean
-	-rm *.o *.a
-
-.PHONY: test FORCE
-
+clean:
+	-rm *.o
