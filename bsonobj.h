@@ -23,7 +23,7 @@
 #include <memory>  // std::unique_ptr
 
 class CObjectID
-{
+{  // {{{
   public:
     CObjectID();
     CObjectID(const bson_oid_t* oid);
@@ -35,7 +35,7 @@ class CObjectID
 };
 
 class CBsonIterator
-{
+{  // {{{
   public:
     CBsonIterator(const CBsonIterator& other);
     CBsonIterator(const bson_iterator* it);
@@ -61,7 +61,7 @@ class CBsonIterator
 };
 
 class CBsonObj
-{
+{  // {{{
   friend class CBsonBuilder;
   public:
     CBsonObj();
@@ -87,6 +87,7 @@ class CBsonObj
     }
 //    bool contains_field(const std::string& field) const;
     const bson* raw_data() const;
+    void print() const;
 //    bool is_valid() const;
     bool is_empty() const;
     bool is_valid() const;
@@ -106,7 +107,7 @@ class CBsonObj
 };
 
 class CBsonBuilder
-{
+{  // {{{
   public:
     CBsonBuilder();
     ~CBsonBuilder();
@@ -131,6 +132,7 @@ class CBsonBuilder
         const CBsonIterator& it);
     int append_date(const std::string& name, int64_t milliseconds);
     int append_subobject(const std::string& name, const CBsonObj& subobject);
+    int append_array(const std::string& name, const CBsonObj& items);
 
     CBsonBuilder& append(const std::string& name, const CObjectID& oid);
     CBsonBuilder& append(const std::string& name, int value);
@@ -139,7 +141,8 @@ class CBsonBuilder
     CBsonBuilder& append(const std::string& name, const std::string& value);
     CBsonBuilder& append(const std::string& name, const char* value);
     CBsonBuilder& append(const std::string& name, bool value);
-    CBsonBuilder& append(const std::string& name, const CBsonObj& subobject);
+    CBsonBuilder& append(const std::string& name, const CBsonObj& subobject,
+        bool is_array = false);
 
   private:
     bson* m_bson;
@@ -151,4 +154,6 @@ std::ostream& operator<< (std::ostream& os, const CBsonIterator& it);
 std::ostream& operator<< (std::ostream& os, const CBsonObj& obj);
 
 #endif  // BSONOBJ_H
+
+// vim: fdm=syntax
 

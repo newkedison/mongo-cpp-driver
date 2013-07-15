@@ -190,6 +190,11 @@ const bson* CBsonObj::raw_data() const
   return m_bson.get();
 }  // }}}
 
+void CBsonObj::print() const
+{
+  bson_print(m_bson.get());
+}
+
 CBsonIterator CBsonObj::get_field(const char* field) const
 {  // {{{
   bson_iterator* it = bson_iterator_alloc();
@@ -352,6 +357,25 @@ int CBsonBuilder::append_subobject(const std::string& name,
   return bson_append_bson(m_bson, name.c_str(), subobject.m_bson.get());
 }  // }}}
 
+int CBsonBuilder::append_array(const std::string& name,
+    const CBsonObj& items)
+{  // {{{
+  int ret = bson_append_start_array(m_bson, name.c_str());
+  if (ret != BSON_OK) return ret;
+  bson_iterator* it = bson_iterator_alloc();
+  bson_iterator_init(it, items.raw_data());
+  int index = 0;
+  while (bson_iterator_more(it))
+  {
+    if (bson_iterator_next(it) != BSON_EOO)
+    {
+      ret = bson_append_element(m_bson, std::to_string(index).c_str(), it);
+      if (ret != BSON_OK) return ret;
+    }
+  }
+  return bson_append_finish_array(m_bson);
+}  // }}}
+
 CBsonBuilder& CBsonBuilder::append(const std::string& name, int value)
 {  // {{{
   bson_append_int(m_bson, name.c_str(), value);
@@ -389,9 +413,16 @@ CBsonBuilder& CBsonBuilder::append(const std::string& name, bool value)
 }  // }}}
 
 CBsonBuilder& CBsonBuilder::append(const std::string& name,
-    const CBsonObj& subobject)
+    const CBsonObj& subobject, bool is_array /* = false */)
 {  // {{{
-  bson_append_bson(m_bson, name.c_str(), subobject.m_bson.get());
+  if (is_array)
+  {
+    append_array(name, subobject);
+  }
+  else
+  {
+    bson_append_bson(m_bson, name.c_str(), subobject.m_bson.get());
+  }
   return *this;
 }  // }}}
 

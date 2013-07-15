@@ -33,6 +33,9 @@ void test_bson()
   std::cout << CBsonBuilder().append("sub1",
       CBsonBuilder().append("sub11",
         CBsonBuilder().append("item", 10).obj()).obj()).obj();
+  CBsonBuilder()
+    .append("arr", CBsonBuilder().append("a", "a").append("b", "b").obj(), true)
+    .obj().print();
 }
 
 void test_client_insert()
@@ -47,6 +50,20 @@ void test_client_insert()
           CBsonBuilder().append("aaa", "hello").obj())
         .obj())
       .obj());
+  client.insert("test1.abc", CBsonBuilder().append("a", "test array")
+    .append("arr", CBsonBuilder().append("a", "a").append("b", "b").obj(), true)
+    .obj());
+  client.insert("test1.abc", CBsonBuilder().append("a", "nested array")
+      .append("arr", CBsonBuilder()
+        .append("subarr", CBsonBuilder()
+          .append("subobj", CBsonBuilder()
+            .append("a", 1).append("b", 2).obj())
+          .append("subobj2", CBsonBuilder()
+            .append("c", 3).append("d", 4).obj())
+          .obj(), true)
+        .append("subarr2", CBsonBuilder()
+          .append("aa", "aa").append("bb", 1.23).obj(), true)
+        .obj(), true).obj());
 }
 
 void test_client_update()
