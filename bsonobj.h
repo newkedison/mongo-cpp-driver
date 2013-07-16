@@ -21,6 +21,7 @@
 #include <iostream>
 #include <utility>
 #include <memory>  // std::unique_ptr
+#include <tuple>
 
 class CObjectID
 {  // {{{
@@ -32,7 +33,7 @@ class CObjectID
     std::string to_string();
   private:
     bson_oid_t m_oid;
-};
+};  // }}}
 
 class CBsonIterator
 {  // {{{
@@ -58,7 +59,7 @@ class CBsonIterator
 
   private:
     bson_iterator* m_iterator;
-};
+};  // }}}
 
 class CBsonObj
 {  // {{{
@@ -104,7 +105,7 @@ class CBsonObj
     std::unique_ptr<bson> m_bson;
     CBsonObj(CBsonObj& other) = delete;
     CBsonObj& operator= (const CBsonObj& other) = delete;
-};
+};  // }}}
 
 class CBsonBuilder
 {  // {{{
@@ -133,6 +134,28 @@ class CBsonBuilder
     int append_date(const std::string& name, int64_t milliseconds);
     int append_subobject(const std::string& name, const CBsonObj& subobject);
     int append_array(const std::string& name, const CBsonObj& items);
+    // Idea come from:
+    // http://stackoverflow.com/a/6894436/1032255/
+    template<std::size_t I = 0, typename... Tp>
+    typename std::enable_if<I == sizeof...(Tp), void>::type
+    append_array(const std::string&, const std::tuple<Tp...>& ) { }
+    template<std::size_t I = 0, typename... Tp>
+    typename std::enable_if<I == 0 && I < sizeof...(Tp), int>::type
+    append_array(const std::string& name, const std::tuple<Tp...>& t)
+    {
+      int ret = bson_append_start_array(m_bson, name.c_str());
+      if (ret != BSON_OK) return ret;
+      append(std::to_string(I), std::get<I>(t));
+      append_array<I + 1, Tp...>(name, t);
+      return bson_append_finish_array(m_bson);
+    }
+    template<std::size_t I = 0, typename... Tp>
+    typename std::enable_if<0 < I && I < sizeof...(Tp), void>::type
+    append_array(const std::string& name, const std::tuple<Tp...>& t)
+    {  // {{{
+      append(std::to_string(I), std::get<I>(t));
+      append_array<I + 1, Tp...>(name, t);
+    }  // }}}
 
     CBsonBuilder& append(const std::string& name, const CObjectID& oid);
     CBsonBuilder& append(const std::string& name, int value);
@@ -143,17 +166,27 @@ class CBsonBuilder
     CBsonBuilder& append(const std::string& name, bool value);
     CBsonBuilder& append(const std::string& name, const CBsonObj& subobject,
         bool is_array = false);
+    template<std::size_t I = 0, typename... Tp>
+    typename std::enable_if<I == sizeof...(Tp), void>::type
+    inline append(const std::string&, const std::tuple<Tp...>& ) { }
+    template<std::size_t I = 0, typename... Tp>
+    typename std::enable_if<I < sizeof...(Tp), CBsonBuilder&>::type
+    inline append(const std::string& name, const std::tuple<Tp...>& t)
+    {  // {{{
+      append_array(name, t);
+      return *this;
+    }  // }}}
 
   private:
     bson* m_bson;
     bool m_is_built;
     static CBsonObj m_static_empty_bson;
-};
+};  // }}}
 
 std::ostream& operator<< (std::ostream& os, const CBsonIterator& it);
 std::ostream& operator<< (std::ostream& os, const CBsonObj& obj);
 
 #endif  // BSONOBJ_H
 
-// vim: fdm=syntax
+// vim: fdm=marker
 

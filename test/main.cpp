@@ -36,6 +36,10 @@ void test_bson()
   CBsonBuilder()
     .append("arr", CBsonBuilder().append("a", "a").append("b", "b").obj(), true)
     .obj().print();
+  CBsonBuilder().append("arr", std::make_tuple(5, "str", 1.23, 'a'))
+    .obj().print();
+  CBsonBuilder().append("arr", std::make_tuple(std::make_tuple(1, 2), 3))
+    .obj().print();
 }
 
 void test_client_insert()
@@ -64,6 +68,12 @@ void test_client_insert()
         .append("subarr2", CBsonBuilder()
           .append("aa", "aa").append("bb", 1.23).obj(), true)
         .obj(), true).obj());
+  client.insert("test1.abc", CBsonBuilder().append("a", "nested array2")
+      .append("arr", std::make_tuple(
+          std::make_tuple(
+            CBsonBuilder().append("a", 1).append("b", 2).obj(),
+            CBsonBuilder().append("c", 3).append("d", 4).obj()),
+          std::make_tuple("aa", 1.23))).obj());
 }
 
 void test_client_update()

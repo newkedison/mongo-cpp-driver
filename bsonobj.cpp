@@ -191,9 +191,9 @@ const bson* CBsonObj::raw_data() const
 }  // }}}
 
 void CBsonObj::print() const
-{
+{  // {{{
   bson_print(m_bson.get());
-}
+}  // }}}
 
 CBsonIterator CBsonObj::get_field(const char* field) const
 {  // {{{
