@@ -6,8 +6,8 @@ before_install:
   - echo 'yes' | sudo add-apt-repository ppa:ubuntu-toolchain-r/test 
   - sudo apt-get update
   - sudo apt-get install gcc-4.8 g++-4.8
-  - sudo ln -s gcc-4.8 /usr/bin/gcc
-  - sudo ln -s g++-4.8 /usr/bin/g++
+  - sudo ln -s -f gcc-4.8 /usr/bin/gcc
+  - sudo ln -s -f g++-4.8 /usr/bin/g++
 script: make linux
 branches:
   only:
