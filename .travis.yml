@@ -3,7 +3,7 @@ compiler:
   - gcc
 before_install:
   - git submodule update --init --recursive
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test 
+  - echo 'yes' | sudo add-apt-repository ppa:ubuntu-toolchain-r/test 
   - sudo apt-get update
   - sudo apt-get install gcc-4.8 g++-4.8
   - sudo ln -s gcc-4.8 /usr/bin/gcc
