@@ -1,4 +1,4 @@
-mongo-cpp-driver
+mongo-cpp-driver [![Build Status](https://travis-ci.org/newkedison/mongo-cpp-driver.png?branch=master)](https://travis-ci.org/newkedison/mongo-cpp-driver)
 ================
 
 Since [c++ driver for mongodb](http://dl.mongodb.org/dl/cxx-driver/) is develop with mongodb itself, it can be up to date and more quickly.
