@@ -2,6 +2,9 @@ first: all
 
 include common.mk
 DESTDIR = ../../lib
+ifdef TRAVIS
+	DESTDIR = build
+endif
 TARGET_S = lib$(TARGET).a
 TARGET_D = lib$(TARGET).so.$(MAJOR_VERSION).$(SUB_VERSION).$(PATCH_VERSION)
 TARGET_D_1 = lib$(TARGET).so.$(MAJOR_VERSION).$(SUB_VERSION)

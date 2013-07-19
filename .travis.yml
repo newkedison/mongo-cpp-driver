@@ -1,9 +1,13 @@
 language: cpp
 compiler:
   - gcc
-  - clang
 before_install:
   - git submodule update --init --recursive
+  - add-apt-repository ppa:ubuntu-toolchain-r/test 
+  - apt-get update
+  - apt-get install gcc-4.8 g++-4.8
+  - ln -s gcc-4.8 /usr/bin/gcc
+  - ln -s g++-4.8 /usr/bin/g++
 script: make linux
 branches:
   only:
