@@ -33,7 +33,7 @@ DEBUG = -gdwarf-4
 
 STRICT = -Wextra -pedantic -Wformat=2 -Wshadow -Wpointer-arith
 STRICT += -Wcast-qual -Wwrite-strings -Wstrict-overflow=4 
-CPPFLAGS = -pipe -Wall $(STRICT) -Werror -std=c++11 $(OP_LEVEL) $(DEBUG) $(ALL_DEFINES)
+CPPFLAGS = -pipe -Wall $(STRICT) -Werror -std=c++0x $(OP_LEVEL) $(DEBUG) $(ALL_DEFINES)
 LFLAGS = -shared
 CFLAGS = -std=c99 $(PEDANTIC) $(OP_LEVEL) $(DEBUG) $(ALL_DEFINES)
 
