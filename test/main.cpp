@@ -40,6 +40,8 @@ void test_bson()
     .obj().print();
   CBsonBuilder().append("arr", std::make_tuple(std::make_tuple(1, 2), 3))
     .obj().print();
+  BSON(_("a", 1)._("b", BSON(_("c", 5)))._("d", BSON_ARRAY("str", 1, 1.2)))
+    .print();
 }
 
 void test_client_insert()

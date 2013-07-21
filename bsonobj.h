@@ -176,12 +176,36 @@ class CBsonBuilder
       append_array(name, t);
       return *this;
     }  // }}}
+    CBsonBuilder& _(const std::string& name, const CObjectID& oid)
+    { return append(name, oid); }
+    CBsonBuilder& _(const std::string& name, int value)
+    { return append(name, value); }
+    CBsonBuilder& _(const std::string& name, int64_t value)
+    { return append(name, value); }
+    CBsonBuilder& _(const std::string& name, double value)
+    { return append(name, value); }
+    CBsonBuilder& _(const std::string& name, const std::string& value)
+    { return append(name, value); }
+    CBsonBuilder& _(const std::string& name, const char* value)
+    { return append(name, value); }
+    CBsonBuilder& _(const std::string& name, bool value)
+    { return append(name, value); }
+    CBsonBuilder& _(const std::string& name, const CBsonObj& subobject,
+        bool is_array = false)
+    { return append(name, subobject, is_array); }
+    template<typename... Tp>
+    CBsonBuilder& _(const std::string& name, const std::tuple<Tp...>& t)
+    { return append(name, t); }
 
   private:
     bson* m_bson;
     bool m_is_built;
     static CBsonObj m_static_empty_bson;
 };  // }}}
+
+#define BSON(data) (CBsonBuilder().data.obj())
+#define BSON_EMPTY (CBsonBuilder::empty_bson())
+#define BSON_ARRAY(...) (std::make_tuple(__VA_ARGS__))
 
 std::ostream& operator<< (std::ostream& os, const CBsonIterator& it);
 std::ostream& operator<< (std::ostream& os, const CBsonObj& obj);
