@@ -10,7 +10,7 @@
  * =============================================================================
  */
 
-#include <mongo/client.h>
+#include "../client.h"
 #include <iostream>
 
 void test_bson()
