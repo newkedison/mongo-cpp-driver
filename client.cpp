@@ -164,6 +164,21 @@ CMongoCursor CMongoClient::find(const std::string& ns, const CBsonObj& query,
         fields_builder.obj().raw_data(), limit, skip, options));
 }
 
+CMongoCursor CMongoClient::find(const std::string& ns, const CBsonObj& query,
+    const CBsonObj& orderby,
+    const std::vector<std::string> fields /* = std::vector<std::string>() */,
+    int limit /* = 0 */, int skip /* = 0 */, int options /* = 0 */)
+{
+  CBsonBuilder fields_builder;
+  for (auto f: fields)
+  {
+    fields_builder.append(f.c_str(), 1);
+  }
+  return CMongoCursor(mongo_find(m_mongo, ns.c_str(),
+        BSON(_("$query", query)._("$orderby", orderby)).raw_data(),
+        fields_builder.obj().raw_data(), limit, skip, options));
+}
+
 CBsonObj CMongoClient::find_one(const std::string& ns, const CBsonObj& query,
     const std::vector<std::string> fields /* = std::vector<std::string>() */)
 {

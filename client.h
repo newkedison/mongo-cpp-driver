@@ -65,16 +65,25 @@ class CMongoClient
         int flags = MONGO_CONTINUE_ON_ERROR);
     int update(const std::string& ns, const CBsonObj& query,
         const CBsonObj& op, int flags);
+    int update_all(const std::string& ns, const CBsonObj& query,
+        const CBsonObj& op)
+    { return update(ns, query, op, MONGO_UPDATE_MULTI); }
     int upsert(const std::string& ns, const CBsonObj& query,
         const CBsonObj& op);
     int remove(const std::string& ns, const CBsonObj& query);
 
     // Cursor
+    static std::vector<std::string> AllFields()
+    { return std::vector<std::string>(); }
     CMongoCursor find(const std::string& ns, const CBsonObj& query,
-        const std::vector<std::string> fields = std::vector<std::string>(),
+        const std::vector<std::string> fields = AllFields(),
+        int limit = 0, int skip = 0, int options = 0);
+    CMongoCursor find(const std::string& ns, const CBsonObj& query,
+        const CBsonObj& orderby,
+        const std::vector<std::string> fields = AllFields(),
         int limit = 0, int skip = 0, int options = 0);
     CBsonObj find_one(const std::string& ns, const CBsonObj& query,
-        const std::vector<std::string> fields = std::vector<std::string>());
+        const std::vector<std::string> fields = AllFields());
 
   private:
     mongo* m_mongo;

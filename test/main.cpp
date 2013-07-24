@@ -122,12 +122,40 @@ void test_client_find()
   }
 }
 
+void test_client_sort()
+{
+  CMongoClient c;
+  c.connect("localhost", 27017);
+  c.insert("test1.abc", BSON(_("a", 1)._("b", 5)._("order", true)));
+  c.insert("test1.abc", BSON(_("a", 2)._("b", 1)._("order", true)));
+  c.insert("test1.abc", BSON(_("a", 3)._("b", 0)._("order", true)));
+  c.insert("test1.abc", BSON(_("a", 4)._("b", 2)._("order", true)));
+  c.insert("test1.abc", BSON(_("a", 5)._("b", 7)._("order", true)));
+  c.insert("test1.abc", BSON(_("a", 6)._("b", 3)._("order", true)));
+  std::cout << "-----------------Unsort:-----------------" << std::endl;
+  CMongoCursor cur1(c.find("test1.abc", BSON(_("order", true))));
+  while (cur1.next())
+    std::cout << cur1.get_object();
+  std::cout << "-----------------Sort 1:-----------------" << std::endl;
+  CMongoCursor cur2(c.find("test1.abc", BSON(_("order", true)),
+        BSON(_("b", 1))));
+  while (cur2.next())
+    std::cout << cur2.get_object();
+  std::cout << "-----------------Sort 2:-----------------" << std::endl;
+  CMongoCursor cur3(c.find("test1.abc", BSON(_("order", true)),
+        BSON(_("b", -1))));
+  while (cur3.next())
+    std::cout << cur3.get_object();
+
+}
+
 void test_client()
 {
   test_client_remove();
   test_client_insert();
   test_client_update();
   test_client_find();
+  test_client_sort();
 }
 
 int main()
