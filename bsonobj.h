@@ -75,7 +75,7 @@ class CBsonObj
 //    std::string to_string(bool is_array = false, bool full = false) const;
 //    void to_string(std::stringstream& ss, bool is_array = false,
 //        bool full = false, int depth = 0) const;
-//    int fields_count() const;
+    int fields_count() const;
     CBsonIterator get_field(const char* field) const;
     CBsonIterator operator[] (const char* field) const {
       return get_field(field);
@@ -92,10 +92,7 @@ class CBsonObj
 //    bool is_valid() const;
     bool is_empty() const;
     bool is_valid() const;
-//    bool equal(const CBsonObj& rhs) const;
 //    bool binary_equal(const CBsonObj& rhs) const;
-//    int hash() const;
-//    std::string md5() const;
 
     friend class CBsonIterator;
     typedef CBsonIterator iterator;
@@ -105,6 +102,8 @@ class CBsonObj
     std::unique_ptr<bson> m_bson;
     CBsonObj(CBsonObj& other) = delete;
     CBsonObj& operator= (const CBsonObj& other) = delete;
+
+    mutable int m_fields_count;
 };  // }}}
 
 class CBsonBuilder
@@ -142,13 +141,13 @@ class CBsonBuilder
     template<std::size_t I = 0, typename... Tp>
     typename std::enable_if<I == 0 && I < sizeof...(Tp), int>::type
     append_array(const std::string& name, const std::tuple<Tp...>& t)
-    {
+    {  // {{{
       int ret = bson_append_start_array(m_bson, name.c_str());
       if (ret != BSON_OK) return ret;
       append(std::to_string(I), std::get<I>(t));
       append_array<I + 1, Tp...>(name, t);
       return bson_append_finish_array(m_bson);
-    }
+    }  // }}}
     template<std::size_t I = 0, typename... Tp>
     typename std::enable_if<0 < I && I < sizeof...(Tp), void>::type
     append_array(const std::string& name, const std::tuple<Tp...>& t)

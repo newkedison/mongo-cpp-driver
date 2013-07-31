@@ -12,6 +12,127 @@
 
 #include "bsonobj.h"
 #include <cstring>
+#include <sstream>
+
+///////////////////////////////////////////////////////////////////
+// Common
+///////////////////////////////////////////////////////////////////
+std::ostream& print(std::ostream& os, const CBsonIterator& it,
+    bool print_single, int nested_level, bool is_object, int item_index)
+{  // {{{
+  std::stringstream ss;
+  for (int i = 0; i < nested_level; ++i)
+    ss << "  ";
+  std::string space = ss.str();
+  ss << "  ";
+  std::string space2 = ss.str();
+  if (print_single && it.type() == BSON_EOO)
+  {
+    os << "End of Object" << std::endl;
+    return os;
+  }
+  if (item_index == 0 && !print_single)
+  {
+    os << (is_object ? "{" : "[");
+    if (it.type() == BSON_EOO)
+    {
+      os << (is_object ? " }" : " ]");
+      return os;
+    }
+    os << std::endl;
+  }
+  std::string s_key;
+  if (it.type() != BSON_EOO)
+  {
+    os << space2;
+    if (is_object)
+      os << it.key() << ": ";
+  }
+  switch(it.type())
+  {
+    case BSON_EOO:
+      os << space << (is_object ? "}": "]")
+        << (nested_level > 0 ? ",": "") << std::endl;
+      return os;
+      break;
+    case BSON_DOUBLE:
+      os << it.value_as_double();
+      break;
+    case BSON_STRING:
+      os << it.value_as_string();
+      break;
+    case BSON_OBJECT:
+    case BSON_ARRAY:
+      {
+        bool is_obj = it.type() == BSON_OBJECT;
+        bson_iterator* sub_it = bson_iterator_alloc();
+        bson_iterator_subiterator(it.raw_data(), sub_it);
+        CBsonIterator sub(sub_it);
+        int index = 0;
+        while (sub.more())
+        {
+          sub.next();
+          print(os, sub, false, nested_level + 1, is_obj, index++);
+        }
+        return os;
+      }
+      break;
+    case BSON_BINDATA:
+      os << "BinaryData";
+      break;
+    case BSON_UNDEFINED:
+      os << "Undefined";
+      break;
+    case BSON_OID:
+      os << "ObjectID";
+      break;
+    case BSON_BOOL:
+      os << (it.value_as_bool() ? "true" : "false");
+      break;
+    case BSON_DATE:
+      os << "Date:" << it.value_as_long();
+      break;
+    case BSON_NULL:
+      os << "NULL";
+      break;
+    case BSON_REGEX:
+      os << "Regex:" << it.value_as_string();
+      break;
+    case BSON_DBREF:
+      os << "DBREF(Deprecated)";
+      break;
+    case BSON_CODE:
+      os << "Code";
+      break;
+    case BSON_SYMBOL:
+      os << "Symbol:" << it.value_as_string();
+      break;
+    case BSON_CODEWSCOPE:
+      os << "CodeWScope";
+      break;
+    case BSON_INT:
+      os << it.value_as_int();
+      break;
+    case BSON_TIMESTAMP:
+      os << "Time "  << it.value_as_timestamp().t
+         << ", Inc " << it.value_as_timestamp().i;
+      break;
+    case BSON_LONG:
+      os << it.value_as_long();
+      break;
+    case BSON_MAXKEY:
+      os << "MaxKey";
+      break;
+    case BSON_MINKEY:
+      os << "MinKey";
+      break;
+  }
+  if (!print_single)
+  {
+    os << ",";
+  }
+  return os << std::endl;
+}  // }}}
 
 ///////////////////////////////////////////////////////////////////
 // CObjectID
@@ -148,29 +269,29 @@ CBsonIterator CBsonIterator::get_subiterator() const
 CBsonObj CBsonBuilder::m_static_empty_bson;
 
 CBsonObj::CBsonObj()
-  :m_bson(bson_alloc())
+  :m_bson(bson_alloc()), m_fields_count(0)
 {  // {{{
   bson_init_empty(m_bson.get());
 }  // }}}
 
 CBsonObj::CBsonObj(const char* str_data)
-  :m_bson(bson_alloc())
+  :m_bson(bson_alloc()), m_fields_count(-1)
 {  // {{{
   bson_init_finished_data_with_copy(m_bson.get(), str_data);
 }  // }}}
 
 CBsonObj::CBsonObj(bson* b)
-  :m_bson(b)
+  :m_bson(b), m_fields_count(-1)
 {  // {{{
 }  // }}}
 
 CBsonObj::CBsonObj(CBsonObj&& other)
-  :m_bson(std::move(other.m_bson))
+  :m_bson(std::move(other.m_bson)), m_fields_count(other.m_fields_count)
 {  // {{{
 }  // }}}
 
 CBsonObj::CBsonObj(const CBsonObj& other)
-  :m_bson(bson_alloc())
+  :m_bson(bson_alloc()), m_fields_count(other.m_fields_count)
 {  // {{{
   bson_copy(m_bson.get(), other.m_bson.get());
 }  // }}}
@@ -192,7 +313,7 @@ const bson* CBsonObj::raw_data() const
 
 void CBsonObj::print() const
 {  // {{{
-  bson_print(m_bson.get());
+  std::cout << *this;
 }  // }}}
 
 CBsonIterator CBsonObj::get_field(const char* field) const
@@ -213,11 +334,6 @@ bool CBsonObj::is_empty() const
 bool CBsonObj::is_valid() const
 {  // {{{
   bson* b = m_bson.get();
-  if (b->data == NULL)
-    std::cout << "data is NULL" << std::endl;
-  if (b->finished == 0)
-    std::cout << "finished is 0" << std::endl;
-
   return b->data != NULL && b->finished != 0;
 }  // }}}
 
@@ -226,6 +342,18 @@ CBsonIterator CBsonObj::begin() const
   bson_iterator* it = bson_iterator_alloc();
   bson_iterator_init(it, m_bson.get());
   return CBsonIterator(it);
+}  // }}}
+
+int CBsonObj::fields_count() const
+{  // {{{
+  if (m_fields_count >= 0)
+    return m_fields_count;
+  m_fields_count = 0;
+  auto it = begin();
+  while(it.more())
+    ++m_fields_count;
+  --m_fields_count;  // exclude the EOO field
+  return m_fields_count;
 }  // }}}
 
 ///////////////////////////////////////////////////////////////////
@@ -373,6 +501,7 @@ int CBsonBuilder::append_array(const std::string& name,
       if (ret != BSON_OK) return ret;
     }
   }
+  bson_iterator_dealloc(it);
   return bson_append_finish_array(m_bson);
 }  // }}}
 
@@ -431,99 +560,25 @@ CBsonBuilder& CBsonBuilder::append(const std::string& name,
 ///////////////////////////////////////////////////////////////////
 std::ostream& operator<< (std::ostream& os, const CBsonIterator& it)
 {  // {{{
-  if (it.type() != BSON_EOO)
-    os << it.key() << ": ";
-  else
-    return os;
-  switch(it.type())
-  {
-    case BSON_EOO:
-      os << "EndOfObject";
-      break;
-    case BSON_DOUBLE:
-      os << it.value_as_double();
-      break;
-    case BSON_STRING:
-      os << it.value_as_string();
-      break;
-    case BSON_OBJECT:
-      {
-        bson* subobject = bson_alloc();
-        bson_init_empty(subobject);
-        bson_iterator_subobject_init(it.raw_data(), subobject, false);
-        CBsonObj obj(subobject);
-        os << obj;
-      }
-      break;
-    case BSON_ARRAY:
-      os << "Array";
-      break;
-    case BSON_BINDATA:
-      os << "BinaryData";
-      break;
-    case BSON_UNDEFINED:
-      os << "Undefined";
-      break;
-    case BSON_OID:
-      os << "ObjectID";
-      break;
-    case BSON_BOOL:
-      os << (it.value_as_bool() ? "true" : "false");
-      break;
-    case BSON_DATE:
-      os << "Date:" << it.value_as_long();
-      break;
-    case BSON_NULL:
-      os << "NULL";
-      break;
-    case BSON_REGEX:
-      os << "Regex:" << it.value_as_string();
-      break;
-    case BSON_DBREF:
-      os << "DBREF(Deprecated)";
-      break;
-    case BSON_CODE:
-      os << "Code";
-      break;
-    case BSON_SYMBOL:
-      os << "Symbol:" << it.value_as_string();
-      break;
-    case BSON_CODEWSCOPE:
-      os << "CodeWScope";
-      break;
-    case BSON_INT:
-      os << it.value_as_int();
-      break;
-    case BSON_TIMESTAMP:
-      os << "Time "  << it.value_as_timestamp().t
-         << ", Inc " << it.value_as_timestamp().i;
-      break;
-    case BSON_LONG:
-      os << it.value_as_long();
-      break;
-    case BSON_MAXKEY:
-      os << "MaxKey";
-      break;
-    case BSON_MINKEY:
-      os << "MinKey";
-      break;
-  }
-  return os;
+  return print(os, it, true, 0, true, 0);
 }  // }}}
 
 std::ostream& operator<< (std::ostream& os, const CBsonObj& obj)
 {  // {{{
   if (!obj.is_valid())
     return os << "Invalid Bson Object" << std::endl;
+  if (obj.is_empty())
+  {
+    return os << "{}" << std::endl;
+  }
+  int index = 0;
   CBsonIterator it = obj.begin();
-  os << "{";
   while (it.more())
   {
     it.next();
-    if (it.type() != BSON_EOO)
-      os << it << "," << std::endl;
+    print(os, it, false, 0, true, index++);
   }
-  return os << "}" << std::endl;
+  return os;
 }  // }}}
 
 

@@ -3,4 +3,4 @@
 cd test
 rm *.o a.out
 make linux
-./a.out
+valgrind --leak-check=full --track-origins=yes --error-exitcode=1 --show-reachable=yes -v ./a.out

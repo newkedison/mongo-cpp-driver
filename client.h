@@ -24,6 +24,8 @@ class CMongoCursor
   public:
     CMongoCursor(CMongoClient& client, const std::string& ns);
     CMongoCursor(mongo_cursor* cursor);
+    CMongoCursor(CMongoCursor&& other);
+    ~CMongoCursor();
 
     CBsonObj get_object() const;
     bool next();
@@ -43,6 +45,8 @@ class CMongoCursor
     mongo_cursor* m_cursor;
     std::unique_ptr<CBsonObj> m_query;
     std::unique_ptr<CBsonObj> m_fields;
+    CMongoCursor(const CMongoCursor& other) = delete;
+    CMongoCursor(CMongoCursor& other) = delete;
 };
 
 class CMongoClient
