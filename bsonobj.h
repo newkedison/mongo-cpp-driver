@@ -175,25 +175,26 @@ class CBsonBuilder
       append_array(name, t);
       return *this;
     }  // }}}
-    CBsonBuilder& _(const std::string& name, const CObjectID& oid)
+    CBsonBuilder& operator() (const std::string& name, const CObjectID& oid)
     { return append(name, oid); }
-    CBsonBuilder& _(const std::string& name, int value)
+    CBsonBuilder& operator() (const std::string& name, int value)
     { return append(name, value); }
-    CBsonBuilder& _(const std::string& name, int64_t value)
+    CBsonBuilder& operator() (const std::string& name, int64_t value)
     { return append(name, value); }
-    CBsonBuilder& _(const std::string& name, double value)
+    CBsonBuilder& operator() (const std::string& name, double value)
     { return append(name, value); }
-    CBsonBuilder& _(const std::string& name, const std::string& value)
+    CBsonBuilder& operator() (const std::string& name, const std::string& value)
     { return append(name, value); }
-    CBsonBuilder& _(const std::string& name, const char* value)
+    CBsonBuilder& operator() (const std::string& name, const char* value)
     { return append(name, value); }
-    CBsonBuilder& _(const std::string& name, bool value)
+    CBsonBuilder& operator() (const std::string& name, bool value)
     { return append(name, value); }
-    CBsonBuilder& _(const std::string& name, const CBsonObj& subobject,
-        bool is_array = false)
+    CBsonBuilder& operator() (const std::string& name,
+        const CBsonObj& subobject, bool is_array = false)
     { return append(name, subobject, is_array); }
     template<typename... Tp>
-    CBsonBuilder& _(const std::string& name, const std::tuple<Tp...>& t)
+    CBsonBuilder& operator() (const std::string& name,
+        const std::tuple<Tp...>& t)
     { return append(name, t); }
 
   private:
@@ -202,7 +203,25 @@ class CBsonBuilder
     static CBsonObj m_static_empty_bson;
 };  // }}}
 
-#define BSON(data) (CBsonBuilder().data.obj())
+// see: http://stackoverflow.com/a/11763277/1032255
+// and  http://stackoverflow.com/a/11624167/1032255
+// eg. BSON(("key1", 1)("key2", 2)("key3", 3))
+#define BSON_ARG_1(arg1) (CBsonBuilder()arg1.obj())
+// eg. BSON("key1", 1) Note it doesn't need parentheses
+#define BSON_ARG_2(arg1, arg2) (CBsonBuilder()(arg1, arg2).obj())
+// eg. BSON("key1", BSON("nested array", 1), true)
+#define BSON_ARG_3(arg1, arg2, arg3) (CBsonBuilder()(arg1, arg2, arg3).obj())
+// eg. BSON("key1", 1, "key2", 2) Also note doesn't need parentheses
+#define BSON_ARG_4(arg1, arg2, arg3, arg4) \
+  (CBsonBuilder()(arg1, arg2)(arg3, arg4).obj())
+// helper macro
+#define BSON_GET_MACRO(_1, _2, _3, _4, NAME, ...) NAME
+// support up to 4 parameters, need C++11 support
+#define BSON(...) \
+  BSON_GET_MACRO(__VA_ARGS__, \
+      BSON_ARG_4, BSON_ARG_3, BSON_ARG_2, BSON_ARG_1, _) \
+  (__VA_ARGS__)
+
 #define BSON_EMPTY (CBsonBuilder::empty_bson())
 #define BSON_ARRAY(...) (std::make_tuple(__VA_ARGS__))
 

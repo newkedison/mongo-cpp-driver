@@ -190,7 +190,7 @@ CMongoCursor CMongoClient::find(const std::string& ns, const CBsonObj& query,
     fields_builder.append(f.c_str(), 1);
   }
   return CMongoCursor(mongo_find(m_mongo, ns.c_str(),
-        BSON(_("$query", query)._("$orderby", orderby)).raw_data(),
+        BSON("$query", query, "$orderby", orderby).raw_data(),
         fields_builder.obj().raw_data(), limit, skip, options));
 }  // }}}
 
