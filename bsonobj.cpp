@@ -505,6 +505,36 @@ int CBsonBuilder::append_array(const std::string& name,
   return bson_append_finish_array(m_bson);
 }  // }}}
 
+int CBsonBuilder::append_code(const std::string& name, const std::string& code,
+    const CBsonObj& scope /* = empty_bson() */)
+{
+  if (scope.is_empty())
+  {
+    return bson_append_code(m_bson, name.c_str(), code.c_str());
+  }
+  return bson_append_code_w_scope(m_bson, name.c_str(), code.c_str(),
+      scope.raw_data());
+}
+
+int CBsonBuilder::append_regex(const std::string& name,
+    const std::string& pattern, int flags /* = 0 */)
+{
+  char options[7] = "";
+  if ((flags & REGEX_FLAG_CASE_INSENSITIVE) > 0)
+    strcat(options, "i");
+  if ((flags & REGEX_FLAG_LOACALE_DEPENDENT) > 0)
+    strcat(options, "l");
+  if ((flags & REGEX_FLAG_MULTILINE_MATCH) > 0)
+    strcat(options, "m");
+  if ((flags & REGEX_FLAG_DOT_FOR_ALL) > 0)
+    strcat(options, "s");
+  if ((flags & REGEX_FLAG_UNICODE) > 0)
+    strcat(options, "u");
+  if ((flags & REGEX_FLAG_VERBOSE_MODE) > 0)
+    strcat(options, "x");
+  return bson_append_regex(m_bson, name.c_str(), pattern.c_str(), options);
+}
+
 CBsonBuilder& CBsonBuilder::append(const std::string& name, int value)
 {  // {{{
   bson_append_int(m_bson, name.c_str(), value);

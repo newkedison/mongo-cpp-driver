@@ -13,7 +13,7 @@
 #include "../client.h"
 #include <iostream>
 
-void test_bson()
+void test_bson_basic()
 {
   CBsonObj o;
   std::cout << o.is_empty() << std::endl;
@@ -40,6 +40,10 @@ void test_bson()
     .obj().print();
   CBsonBuilder().append("arr", std::make_tuple(std::make_tuple(1, 2), 3))
     .obj().print();
+}
+
+void test_bson_macro()
+{
   BSON(("a", 1) ("b", BSON("c", 5)) ("d", BSON_ARRAY("str", 1, 1.2)))
     .print();
 }
@@ -153,18 +157,65 @@ void test_client_sort()
     std::cout << cur3.get_object();
 }
 
+void test_client_regex()
+{
+  CMongoClient c;
+  c.connect("localhost", 27017);
+  c.insert("test1.abc", BSON("a", "abaabaaab"));
+  c.insert("test1.abc", BSON("a", "aaaaaaab"));
+  c.insert("test1.abc", BSON("a", "ababababababa"));
+  CBsonBuilder bb;
+  bb.append_regex("a", "Aab", REGEX_FLAG_CASE_INSENSITIVE);
+  CMongoCursor cur(c.find("test1.abc", bb.obj()));
+  while (cur.next())
+    std::cout << cur.get_object();
+}
+
+void test_client_code()
+{
+  CMongoClient c;
+  c.connect("localhost", 27017);
+  c.insert("test1.abc", BSON("a", 1, "b", 2));
+  c.insert("test1.abc", BSON("a", 2, "b", 1));
+  CBsonBuilder b;
+  b.append_code("$where",
+      "function() { return this.b > this.a && this.a % 2 == 1; }");
+  CMongoCursor cur(c.find("test1.abc", b.obj()));
+  while (cur.next())
+    std::cout << cur.get_object();
+}
+
+void test_bson()
+{
+  std::cout << "###### test bson basic" << std::endl;
+  test_bson_basic();
+  std::cout << "###### test bson macro" << std::endl;
+  test_bson_macro();
+}
+
 void test_client()
 {
+  std::cout << "###### test client remove" << std::endl;
   test_client_remove();
+  std::cout << "###### test client insert" << std::endl;
   test_client_insert();
+  std::cout << "###### test client update" << std::endl;
   test_client_update();
+  std::cout << "###### test client find" << std::endl;
   test_client_find();
+  std::cout << "###### test client sort" << std::endl;
   test_client_sort();
+  std::cout << "###### test client regex" << std::endl;
+  test_client_regex();
+  std::cout << "###### test client code" << std::endl;
+  test_client_code();
 }
 
 int main()
 {
+  std::cout << "#### test bson" << std::endl;
   test_bson();
+  std::cout << "#### test client" << std::endl;
   test_client();
   return 0;
 }

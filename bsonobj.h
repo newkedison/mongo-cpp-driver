@@ -133,6 +133,10 @@ class CBsonBuilder
     int append_date(const std::string& name, int64_t milliseconds);
     int append_subobject(const std::string& name, const CBsonObj& subobject);
     int append_array(const std::string& name, const CBsonObj& items);
+    int append_code(const std::string& name, const std::string& code,
+        const CBsonObj& scope = empty_bson());
+    int append_regex(const std::string& name, const std::string& pattern,
+        int flags = 0);
     // Idea come from:
     // http://stackoverflow.com/a/6894436/1032255/
     template<std::size_t I = 0, typename... Tp>
@@ -227,6 +231,13 @@ class CBsonBuilder
 
 std::ostream& operator<< (std::ostream& os, const CBsonIterator& it);
 std::ostream& operator<< (std::ostream& os, const CBsonObj& obj);
+
+const int REGEX_FLAG_CASE_INSENSITIVE = 1;
+const int REGEX_FLAG_MULTILINE_MATCH = 1 << 1;
+const int REGEX_FLAG_VERBOSE_MODE = 1 << 2;
+const int REGEX_FLAG_LOACALE_DEPENDENT = 1 << 3;
+const int REGEX_FLAG_DOT_FOR_ALL = 1 << 4;
+const int REGEX_FLAG_UNICODE = 1 << 5;
 
 #endif  // BSONOBJ_H
 
