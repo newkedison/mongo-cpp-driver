@@ -12,6 +12,11 @@ TARGET_D_2 = lib$(TARGET).so.$(MAJOR_VERSION)
 TARGET_D_3 = lib$(TARGET).so
 TARGET_D_SONAME = $(TARGET_D_2)
 
+ifeq ($(shell uname -m), x86_64)
+	CPPFLAGS += -fPIC
+	CFLAGS += -fPIC
+endif
+
 all: $(DESTDIR)/$(TARGET_D) $(DESTDIR)/$(TARGET_S)
 
 $(DESTDIR)/$(TARGET_D): $(OBJECTS) FORCE

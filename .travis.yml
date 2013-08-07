@@ -14,6 +14,9 @@ before_install:
   - sudo apt-get install mongodb-10gen
   - sudo service mongodb start
   - sudo apt-get install valgrind
+  - uname -a
+  - gcc --version
+  - ld --version
 script: make linux && ./run_test.sh
 branches:
   only:
