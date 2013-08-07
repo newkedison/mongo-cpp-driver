@@ -33,11 +33,13 @@ DEBUG = -gdwarf-4
 
 STRICT = -Wextra -pedantic -Wformat=2 -Wshadow -Wpointer-arith
 STRICT += -Wcast-qual -Wwrite-strings -Wstrict-overflow=4 
-CPPFLAGS = -pipe -Wall $(STRICT) -Werror -std=c++11 -fPIC $(OP_LEVEL) $(DEBUG) $(ALL_DEFINES)
+CPPFLAGS = -pipe -Wall $(STRICT) -Werror -std=c++11 $(OP_LEVEL) $(DEBUG) $(ALL_DEFINES)
 LFLAGS = -shared
-CFLAGS = -std=c99 -fPIC $(PEDANTIC) $(OP_LEVEL) $(DEBUG) $(ALL_DEFINES)
+CFLAGS = -std=c99 $(PEDANTIC) $(OP_LEVEL) $(DEBUG) $(ALL_DEFINES)
 
-# run `make dep` to get these dependencies (linux only)
+$(OBJECTS): Makefile common.mk linux.mk win32.mk
+
+# run `make -f common.mk dep` to get these dependencies (linux only)
 c_driver/src/bcon.o: c_driver/src/bcon.c c_driver/src/bcon.h c_driver/src/bson.h
 c_driver/src/bson.o: c_driver/src/bson.c c_driver/src/bson.h c_driver/src/encoding.h
 c_driver/src/encoding.o: c_driver/src/encoding.c c_driver/src/bson.h \
