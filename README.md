@@ -21,3 +21,7 @@ So, I want to develope a new c++ driver base on [mongo-c-driver](https://github.
 This driver will only depends on C++11 standard and the gcc toolchain
 
 
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/newkedison/mongo-cpp-driver/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
